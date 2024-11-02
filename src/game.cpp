@@ -138,7 +138,7 @@ void TicTacToe::move_result(){
     if(!player) ki_move();
   }
 
-   paintNow();
+  paintNow();
 }
 
 void TicTacToe::mouseKlick(wxMouseEvent& event){
@@ -156,7 +156,7 @@ void TicTacToe::mouseKlick(wxMouseEvent& event){
 
 bool TicTacToe::same_player_on(unsigned int a, unsigned int b, unsigned int c){
   return
-    a != 3
+    a != FREE
     &&
     a == b
     &&

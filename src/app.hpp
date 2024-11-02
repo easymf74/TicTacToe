@@ -14,8 +14,6 @@ class MyApp: public wxApp
   //____________
   const unsigned int SIZE = 400;
   const unsigned int title_height = 20;
-public:
-        
 };
 
 #endif //APP_HPP

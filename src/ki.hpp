@@ -6,7 +6,7 @@
 #include <vector>
 class Ki {
 public:
-  static const int INF    = 100;
+  static const int INF    =  21;
   static const int KI     =   1;
   static const int HUM    =   2;
   static const int WIN    =  11;
@@ -30,6 +30,7 @@ public:
     unsigned int x,
     unsigned int y
     );
+  
   Move make_move();
 private:
   std::array<std::array<unsigned int,3>,3> grid;
