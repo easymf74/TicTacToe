@@ -6,8 +6,16 @@
 #include <vector>
 class Ki {
 public:
-  static const int KI=1;
-  static const int HUM=2;
+  static const int INF    = 100;
+  static const int KI     =   1;
+  static const int HUM    =   2;
+  static const int WIN    =  11;
+  static const int TIE    =  10;
+  static const int GO     =   0;
+  static const int LOOSE  =  -1;
+  static const int RESET  =   0;
+
+  unsigned int leafnotes;
   
   struct Move{
     unsigned int x=2;
@@ -34,23 +42,14 @@ private:
     &field
     ) const;
 
-  Move max(
-    std::array<std::array<unsigned int,3>,3> &field,
-    int alpha,
-    int beta
-    ) const;
+  Move sim_ki_turn
+  (int alpha, int beta);
 
-  Move min(
-    std::array<std::array<unsigned int,3>,3> &field,
-    int alpha,
-    int beta
-    ) const;
-  
-  int game_over(
-    std::array<std::array<unsigned int,3>,3>&,
-    int,
-    const Move&
-    ) const;
+  Move sim_human_turn
+  (int alpha, int beta);
+
+  int score() const;
+
 };
 
 #endif //KI_HPP

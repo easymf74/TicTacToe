@@ -17,13 +17,14 @@ void Ki::set_player_move(unsigned int x, unsigned int y){
 }
 
 Ki::Move Ki::make_move(){
-  int alpha = -9;
-  int beta  =  9;
-  
-  Move m = max(grid, alpha, beta);
-  grid[m.x][m.y] = KI; 
+  int alpha = -INF;
+  int beta  =  INF;
 
-  return m;
+  leafnotes = 0;
+  Move best_move = sim_ki_turn(alpha, beta);
+  grid[best_move.x][best_move.y] = KI; 
+
+  return best_move;
 }
 
 std::vector<Ki::Move>
@@ -40,112 +41,83 @@ Ki::get_possible_moves
 }
 
 
-Ki::Move Ki::max(
-  std::array<std::array<unsigned int,3>,3> &field,
-  int alpha,
-  int beta
-  ) const{
-  int value=-9;
-  Move m;
-  
-  std::vector<Move> possible_moves = get_possible_moves(field);
+Ki::Move Ki::sim_ki_turn(int alpha, int beta){
+  int value = -INF;
+  Move best;
+  best.value = score(); // score the turn the human made
+  if(best.value == WIN) best.value = LOOSE;
 
-  for( Move move : possible_moves){
-    //auto new_field = field; // reset the move in the same level
+  // basecase
+  if(best.value && ++leafnotes)
+    return best;
 
-    /*  Game over?
-	0: NO
-	1: TIE
-	2: WIN
-     */
-    int result = game_over(field,KI,move);
-    if(result){ // Basecase TIE::1 or WIN::2
-      field[move.x][move.y] = 0;
-      if (result > value){ 
-	value = result; 
-	m = move; 
-	m.value = value; 
-      }
-      if (result >= beta) 
-        break; // beta-cutoff
-      if(result > alpha) alpha = result;
-    }// end basecase
-    else{ // no basecase
-      Move d = min(field, alpha, beta);
-      field[move.x][move.y] = 0;
-      if (d.value > value) { 
-        value = d.value; 
-	m = move; 
-	m.value = d.value;
-      }
-      if (d.value >= beta) 
-        break; // beta-cutoff : try no other move on this level
-     
-      if (value > alpha)
-	alpha = value;
-      } // end not base condition
-  }// end for all possible moves
+  std::vector<Move> possible_moves = get_possible_moves(grid);
 
-  return m;
-}
+  for(const Move &move : possible_moves){
+    grid[move.x][move.y] = KI;
+    Move human_move = sim_human_turn(alpha, beta);
+    grid[move.x][move.y] = RESET;
 
-Ki::Move Ki::min(
-  std::array<std::array<unsigned int,3>,3> &field,
-  int alpha,
-  int beta
-  ) const{
-  int value = 9;
-  Move m;
-  
-  std::vector<Move> possible_moves = get_possible_moves(field);
+    // rank faster wins higher 
+    if(human_move.value == WIN)
+      human_move.value += possible_moves.size();
 
-  for( Move move : possible_moves){
-    int result = game_over(field,HUM,move);
+    //rank faster draws lower
+    if(human_move.value == TIE)
+      human_move.value -= possible_moves.size();
+
+    // rank faster flops lower
+    if(human_move.value == LOOSE)
+      human_move.value -= possible_moves.size();
     
-    if(result){
-      field[move.x][move.y] = 0;
-      // basecase
-      // if result=WIN::2: we loose = least case
-      if(result == 2) result = -1;
-      if (result < value){
-	value = result;
-	m = move;
-	m.value = value;
-      }
-      if (result <= alpha) 
-        break; // alpha-cutoff
-      
-      if( result < beta) beta = result;
-    }// end basecase
-    else{ // no basecae
-      Move u = max(field, alpha, beta);
-      field[move.x][move.y] = 0;
-      if (u.value < value) {
-        value = u.value;
-	m = move;
-	m.value = u.value;
-      }
-      if (u.value <= alpha) 
-        break; // alpha-cutoff
-      
-      if (value < beta)
-	beta = value;
-      } // end not base condition
+    if(human_move.value > value){
+      value = human_move.value;
+      best = {move.x, move.y, value};
+    }
+    
+    if(human_move.value >= beta)
+      break; // beta-cutoff skip other moves with same level
 
+    if(human_move.value > alpha)
+      alpha = human_move.value;
+    
   }// end for all possible moves
-  return m;
+    
+  return best;
+};
+
+Ki::Move Ki::sim_human_turn(int alpha, int beta){
+  int value = INF;
+  Move low;
+  low.value = score();// score the turn the ki made
+  
+  // basecase
+  if( low.value && ++leafnotes)
+    return low;
+
+  std::vector<Move> possible_moves = get_possible_moves(grid);
+  for(Move move : possible_moves){
+    grid[move.x][move.y] = HUM;
+    Move ki_move = sim_ki_turn(alpha, beta);
+    grid[move.x][move.y] = RESET;
+
+    if(ki_move.value < value){
+      value = ki_move.value;
+      low = {move.x,move.y,value};
+    }
+
+    if(ki_move.value <= alpha)
+      break; // alpha-cutoff skip other moves with same level
+
+    if (ki_move.value < beta)
+      beta = ki_move.value;
+    
+  }// end for all possible moves
+  
+  return low;
 }
 
-int Ki::game_over(
-    std::array<std::array<unsigned int,3>,3> &grid,
-    int player,
-    const Move& move
-  ) const{
-  
-  const int GO     =  0;
-  const int TIE    =  1;
-  const int WIN    =  2;
-  grid[move.x][move.y] = player;
+int Ki::score() const{
 
   for(unsigned int i = 0; i<3;++i)
     if(
@@ -191,4 +163,5 @@ int Ki::game_over(
       if(!grid[i][j]) return GO;
   
   return TIE;
-}
+};
+

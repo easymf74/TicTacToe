@@ -28,7 +28,9 @@ void TicTacToe::ki_move(){
   if(ready) return;
   Ki::Move m = ki.make_move();
   grid[m.x][m.y] = player;
-  std::cout << "Ki plays field " << m.x << ',' << m.y << ": " << m.value << std::endl;
+  std::cout << "Ki plays field "
+	    << m.x << ',' << m.y << ": " << m.value
+	    << " after searching " << ki.leafnotes << " leafnotes."<< std::endl;
   move_result();
 };
 
